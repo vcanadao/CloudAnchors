@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CloudAnchors</string>
+    <string name="clear">Clear</string>
+    <string name="resolve">Resolve</string>
 </resources>
