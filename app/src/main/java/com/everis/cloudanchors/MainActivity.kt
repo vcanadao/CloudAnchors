@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import com.google.ar.core.Anchor
+import com.google.ar.core.Plane
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Renderable
@@ -19,7 +20,23 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        with (sceneformFragment as CustomArFragment) {
+            this.setOnTapArPlaneListener { hitResult, plane, motionEvent ->
+                //Nos aseguramos de sólo posicionar en plano horizontal
+                if (plane.type != Plane.Type.HORIZONTAL_UPWARD_FACING) { //touch horizontal planos
+                    return@setOnTapArPlaneListener
+                }
 
+
+                placeObject(
+                    this,
+                    cloudAnchor,
+                    Uri.parse("dog.sfb")
+                ) //Posicionamos el objeto 3D con su Anchor
+
+            }
+        }
+        }
     }
 
     private fun addNodeToScene(fragment: ArFragment, anchor: Anchor, renderable: Renderable) {
@@ -35,4 +52,31 @@ class MainActivity : AppCompatActivity() {
         nodeTransformation.renderable = renderable
         nodeTransformation.select()
     }
+
+    private fun placeObject(fragment: ArFragment, anchor: Anchor, model: Uri?) {
+        /*
+        AGREGANDO RENDERABLE
+        Mediante el ModelRenderalbe  obtenemos el Nodo con el modelo renderizado
+        para luego ponerlo en la escena
+         */
+        ModelRenderable.builder()
+            .setSource(fragment.context, model)
+            .build()
+            .thenAccept { renderable ->
+                //Objeto renderizado
+                addNodeToScene(fragment, anchor, renderable)
+            }
+            .exceptionally { throwable ->
+                val toast =
+                    Toast.makeText(
+                        this,
+                        getString(R.string.error_message_renderable_not_loaded),
+                        Toast.LENGTH_LONG
+                    )
+                toast.setGravity(Gravity.CENTER, 0, 0)
+                toast.show()
+                null
+            }
+    }
+
 }
