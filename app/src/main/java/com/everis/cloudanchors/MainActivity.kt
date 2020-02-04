@@ -20,13 +20,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        with (sceneformFragment as CustomArFragment) {
+        with(sceneformFragment as CustomArFragment) {
             this.setOnTapArPlaneListener { hitResult, plane, motionEvent ->
                 //Nos aseguramos de sólo posicionar en plano horizontal
                 if (plane.type != Plane.Type.HORIZONTAL_UPWARD_FACING) { //touch horizontal planos
                     return@setOnTapArPlaneListener
                 }
 
+                val newAnchor = hitResult.createAnchor()
+                setCloudAnchor(newAnchor)
 
                 placeObject(
                     this,
@@ -36,7 +38,14 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+    }
+
+    private fun setCloudAnchor(newAnchor: Anchor) {
+        if (cloudAnchor != null) { //Si el cloudAnchor existe le hacemos un detach, para poder reasignarlo
+            cloudAnchor.detach()
         }
+        //Asignamos el CloudAnchor a un nuevo Anchor
+        cloudAnchor = newAnchor
     }
 
     private fun addNodeToScene(fragment: ArFragment, anchor: Anchor, renderable: Renderable) {
