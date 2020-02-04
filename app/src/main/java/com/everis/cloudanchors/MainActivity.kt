@@ -14,8 +14,16 @@ import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
 import kotlinx.android.synthetic.main.activity_main.*
 
+sealed class AppAnchorState {
+    object None : AppAnchorState()
+    object Hosting : AppAnchorState()
+    object Hosted : AppAnchorState()
+}
+
 class MainActivity : AppCompatActivity() {
     private var cloudAnchor: Anchor? = null
+    private var appAnchorState: AppAnchorState = AppAnchorState.None
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +36,10 @@ class MainActivity : AppCompatActivity() {
                     return@setOnTapArPlaneListener
                 }
 
-                val newAnchor = hitResult.createAnchor()
+                //Alojamos en cloud el anchor recien creado al pulsar sobre la pantalla
+                val newAnchor = arSceneView.session?.hostCloudAnchor(hitResult.createAnchor())
+                appAnchorState = AppAnchorState.Hosting
+
                 setCloudAnchor(newAnchor)
 
                 placeObject(
