@@ -3,6 +3,7 @@ package com.everis.cloudanchors
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Gravity
 import android.widget.Toast
 import com.google.ar.core.Anchor
 import com.google.ar.core.Plane
@@ -14,7 +15,7 @@ import com.google.ar.sceneform.ux.TransformableNode
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var cloudAnchor: Anchor
+    private var cloudAnchor: Anchor? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,17 +33,24 @@ class MainActivity : AppCompatActivity() {
 
                 placeObject(
                     this,
-                    cloudAnchor,
+                    cloudAnchor!!,
                     Uri.parse("dog.sfb")
                 ) //Posicionamos el objeto 3D con su Anchor
 
             }
         }
+
+        clearButton.setOnClickListener {
+            //Al limpiar seteamos nuestra variable global cloudAnchor a null para eliminarlo
+            //al poner el cloudAnchor a null se eliminar de la escena el elemento 3D renderizado
+            setCloudAnchor(null)
+        }
+
     }
 
-    private fun setCloudAnchor(newAnchor: Anchor) {
+    private fun setCloudAnchor(newAnchor: Anchor?) {
         if (cloudAnchor != null) { //Si el cloudAnchor existe le hacemos un detach, para poder reasignarlo
-            cloudAnchor.detach()
+            cloudAnchor!!.detach()
         }
         //Asignamos el CloudAnchor a un nuevo Anchor
         cloudAnchor = newAnchor
@@ -79,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                 val toast =
                     Toast.makeText(
                         this,
-                        getString(R.string.error_message_renderable_not_loaded),
+                        "Renderable no cargado",
                         Toast.LENGTH_LONG
                     )
                 toast.setGravity(Gravity.CENTER, 0, 0)

@@ -8,8 +8,8 @@ class CustomArFragment : ArFragment(){
 
     override fun getSessionConfiguration(session: Session?): Config {
      //Deshabilitamos la animacion de la mano del inicio
+        planeDiscoveryController.hide()
         planeDiscoveryController.setInstructionView(null)
-
         //Obtenemos la configuracion por defecto llamando al metodo getSessionConfiguration de la clase Padre
         val config = super.getSessionConfiguration(session)
 
