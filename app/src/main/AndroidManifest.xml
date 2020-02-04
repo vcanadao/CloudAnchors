@@ -16,7 +16,7 @@
         android:theme="@style/AppTheme">
 
         <meta-data android:name="com.google.ar.core" android:value="required"/>
-        <meta-data android:name="com.google.ar.API_KEY"
+        <meta-data android:name="com.google.android.ar.API_KEY"
             android:value="AIzaSyBP0N2Xu5diTeoPnoNmPsSfzeKSn6SfVN8"/>
 
         <activity android:name=".MainActivity"
