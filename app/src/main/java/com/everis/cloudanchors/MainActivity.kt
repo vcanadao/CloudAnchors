@@ -1,10 +1,10 @@
 package com.everis.cloudanchors
 
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.ar.core.Anchor
 import com.google.ar.core.Plane
 import com.google.ar.sceneform.AnchorNode
@@ -38,23 +38,33 @@ class MainActivity : AppCompatActivity() {
             setOnTapArPlaneListener { hitResult, plane, motionEvent ->
                 //Nos aseguramos de sólo posicionar en plano horizontal
                 if (plane.type != Plane.Type.HORIZONTAL_UPWARD_FACING ||
-                        appAnchorState != AppAnchorState.None) { //touch horizontal planos
+                    appAnchorState != AppAnchorState.None
+                ) { //touch horizontal planos y nos aseguramos de que el estado del Anchor sea None
                     return@setOnTapArPlaneListener
                 }
 
-                //Alojamos en cloud el anchor recien creado al pulsar sobre la pantalla
+                /*
+                    Alojamos en cloud el anchor recien creado al pulsar sobre la pantalla,
+                    es decir lo almacenamos en cloud. Creamos el Anchor correspondiente a la posición
+                    de la panttalla pulsada por el usuario usando el objeto HitResult devuelto en el
+                    listener
+                 */
+                Toast.makeText(context, "Hosting anchor....", Toast.LENGTH_SHORT).show()
                 val newAnchor = arSceneView.session?.hostCloudAnchor(hitResult.createAnchor())
                 setCloudAnchor(newAnchor)
 
+                /*
+                    Cambiamos el estado a Hosting. Es importante hacerlo en este punto porque al setear
+                    un nuevo Anchor se pone por defecto a None
+                */
                 appAnchorState = AppAnchorState.Hosting
-                Toast.makeText(context, "Hosting anchor....", Toast.LENGTH_SHORT).show()
 
-
+                //Posicionamos el objeto 3D con su Anchor
                 placeObject(
                     this,
                     cloudAnchor!!,
                     Uri.parse("dog.sfb")
-                ) //Posicionamos el objeto 3D con su Anchor
+                )
 
             }
         }
@@ -70,11 +80,11 @@ class MainActivity : AppCompatActivity() {
 
             with(sceneformFragment as CustomArFragment) {
                 if (cloudAnchorId.isNotEmpty()) {
-                    val resolvedAnchor = arSceneView.session!!.resolveCloudAnchor(cloudAnchorId)
-                    setCloudAnchor(resolvedAnchor)
-                    placeObject(this, resolvedAnchor, Uri.parse("dog.sfb"))
                     Toast.makeText(context, "Now resolving anchor....", Toast.LENGTH_SHORT).show()
-                    appAnchorState = AppAnchorState.Resolving
+                    val resolvedAnchor = arSceneView.session!!.resolveCloudAnchor(cloudAnchorId) //Resolvemos el Anchor que está en cloud a partir de su ID
+                    setCloudAnchor(resolvedAnchor) //Seteamos el Anchor resuelto
+                    placeObject(this, resolvedAnchor, Uri.parse("dog.sfb")) //Cargamos la figura 3D en el Anchor
+                    appAnchorState = AppAnchorState.Resolving //Cambiamos el state del Anchor a Resolving. Es importnte hacerlo al final porque cuando lo seteamos se pone a None
                 }
             }
         }
@@ -87,25 +97,42 @@ class MainActivity : AppCompatActivity() {
 
     @Synchronized //Nos aseguramos que sólo un hilo pueda estar accediendo a la función
     private fun checkUpdateAnchor() {
-            //Tenemos que asegurarnos que la peticion de hosting sólo se haga una vez
+        /*
+            Tenemos que asegurarnos que la peticion de hosting sólo se haga una vez
+            es decir sólo hospedamos el Anchor cuando el estado sea Hosting o Resolving
+         */
         if (appAnchorState != AppAnchorState.Hosting && appAnchorState != AppAnchorState.Resolving) {
             return
         }
+        /*
+            Obtenemos el estado del cloudAnchor en cloud
+            Hay que diferenciar este estado al appAnchorState. appAnchorState es un estado nuestro
+            que usamos para saber la situación actual en la que estamos con el Anchor y cloudAnchorState
+            es el estado
+         */
         val cloudState = cloudAnchor?.cloudAnchorState
 
         if (appAnchorState == AppAnchorState.Hosting) {
             if (cloudState!!.isError) {
-                Toast.makeText(this, "Error hosting anchor.... $cloudState", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error hosting anchor.... $cloudState", Toast.LENGTH_SHORT)
+                    .show()
                 appAnchorState = AppAnchorState.None
             } else if (cloudState == Anchor.CloudAnchorState.SUCCESS) {
-                //cloudAnchorId es el ID que pueden usar otras aplicaciones para encontrar o compartir
-                //el Anchor de Google Cloud service
-                Toast.makeText(this, "Anchor hosted! Cloud ID: ${cloudAnchor!!.cloudAnchorId}", Toast.LENGTH_SHORT).show()
-                appAnchorState = AppAnchorState.None
+                /*
+                    Si el estado es Hosting y no ha dado error obtenemos el cloudAnchorId
+                    cloudAnchorId es el ID que pueden usar otras aplicaciones para encontrar o compartir
+                    el Anchor de Google Cloud service
+                 */
+
+                val id = cloudAnchor!!.cloudAnchorId
+                etResolve.setText(id) //Lo seteamos por comidada en el cuadro de texto
+                Toast.makeText(this, "Anchor hosted! Cloud ID: $id", Toast.LENGTH_SHORT).show()
+                appAnchorState = AppAnchorState.None //Cambiamos el state a none
             }
         } else if (appAnchorState == AppAnchorState.Resolving) {
             if (cloudState!!.isError) {
-                Toast.makeText(this, "Error resolving anchor.... $cloudState", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error resolving anchor.... $cloudState", Toast.LENGTH_SHORT)
+                    .show()
                 appAnchorState = AppAnchorState.None
             } else if (cloudState == Anchor.CloudAnchorState.SUCCESS) {
                 Toast.makeText(this, "Anchor resolved successfully", Toast.LENGTH_SHORT).show()
